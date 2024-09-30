@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import randomColor from "randomcolor";
 
 // Helper function to generate time slots from 00:00 to 23:00
 const generateTimeSlots = () =>
@@ -18,17 +19,6 @@ function DayBody({ day }) {
     "Saturday",
   ];
 
-  // Colors to choose randomly
-  const colors = [
-    "#FF6384",
-    "#36A2EB",
-    "#FFCE56",
-    "#45A049",
-    "#F7464A",
-    "#949FB1",
-    "#4D5360",
-  ];
-
   const timeSlots = generateTimeSlots();
   const currentDay = daysOfWeek[day]; // Get the current day
 
@@ -41,7 +31,14 @@ function DayBody({ day }) {
         const response = await axios.get(
           "http://localhost:5000/api/appointments"
         );
-        setAppointments(response.data);
+
+        // Assign a random color to each appointment
+        const appointmentsWithColors = response.data.map((appointment) => ({
+          ...appointment,
+          color: randomColor(), // Assign a random color here
+        }));
+
+        setAppointments(appointmentsWithColors);
       } catch (error) {
         console.error("Error fetching appointments: ", error);
       }
@@ -89,11 +86,9 @@ function DayBody({ day }) {
 
         {/* Second Column for Appointments */}
         <div className="flex flex-col">
-          {timeSlots.map((_, index) => {
-            const hour = parseInt(_.split(":")[0], 10);
+          {timeSlots.map((time, index) => {
+            const hour = parseInt(time.split(":")[0], 10);
             const appointmentsForHour = getAppointmentsForHour(hour);
-            const randomColor =
-              colors[Math.floor(Math.random() * colors.length)]; // Get random color
 
             return (
               <div
@@ -104,8 +99,8 @@ function DayBody({ day }) {
                 {appointmentsForHour.map((appointment, i) => (
                   <div
                     key={i}
-                    style={{ backgroundColor: randomColor }}
-                    className=" text-sm py-1 px-2 rounded-md font-semibold w-full"
+                    style={{ backgroundColor: appointment.color }} // Use the assigned color
+                    className="text-sm  text-white py-1 px-2 rounded-md font-semibold w-full"
                   >
                     {appointment.title}
                   </div>

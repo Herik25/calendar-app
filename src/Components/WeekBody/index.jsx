@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import randomColor from "randomcolor";
 
 // Helper function to get the start of the week (Sunday)
 const getStartOfWeek = (date) => {
@@ -8,17 +9,6 @@ const getStartOfWeek = (date) => {
   const diff = start.getDate() - day; // Subtracting the current day to get Sunday
   return new Date(start.setDate(diff));
 };
-
-// Colors to choose randomly
-const colors = [
-  "#FF6384",
-  "#36A2EB",
-  "#FFCE56",
-  "#45A049",
-  "#F7464A",
-  "#949FB1",
-  "#4D5360",
-];
 
 // Helper function to format the date for each day (e.g., "Sun 22")
 const formatDay = (date) => {
@@ -43,7 +33,14 @@ function WeekBody({ currentDate }) {
         const response = await axios.get(
           "http://localhost:5000/api/appointments"
         );
-        setAppointments(response.data);
+
+        // Assign a random color to each appointment
+        const appointmentsWithColors = response.data.map((appointment) => ({
+          ...appointment,
+          color: randomColor(), // Assign a random color here
+        }));
+
+        setAppointments(appointmentsWithColors);
       } catch (error) {
         console.error("Error fetching appointments: ", error);
       }
@@ -75,7 +72,6 @@ function WeekBody({ currentDate }) {
         appointmentDate.getFullYear() === day.date.getFullYear() &&
         appointmentDate.getMonth() === day.date.getMonth() &&
         appointmentDate.getDate() === day.date.getDate() &&
-        // appointmentStartTime === hour
         hour >= appointmentStartTime &&
         hour < appointmentEndTime // Check if the hour is within the appointment range
       );
@@ -112,8 +108,6 @@ function WeekBody({ currentDate }) {
             {timeSlots.map((time, timeIndex) => {
               const hour = parseInt(time.split(":")[0], 10);
               const appointmentsForSlot = getAppointmentsForSlot(day, hour);
-              const randomColor =
-                colors[Math.floor(Math.random() * colors.length)]; // Get random color
 
               return (
                 <div
@@ -124,8 +118,8 @@ function WeekBody({ currentDate }) {
                   {appointmentsForSlot.map((appointment, i) => (
                     <div
                       key={i}
-                      style={{ backgroundColor: randomColor }}
-                      className=" text-white text-sm py-1 px-2 rounded-md font-semibold w-full"
+                      style={{ backgroundColor: appointment.color }} // Use the assigned color
+                      className="text-white text-sm py-1 px-2 rounded-md font-semibold w-full"
                     >
                       {appointment.title}
                     </div>

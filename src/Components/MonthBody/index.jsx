@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import randomColor from "randomcolor";
 
 // Helper function to get the number of days in a given month
 const getDaysInMonth = (year, month) => {
@@ -21,17 +22,6 @@ function MonthBody({ month }) {
   // Days of the week array starting with Sunday
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thurs", "Fri", "Sat"];
 
-  // Colors to choose randomly
-  const colors = [
-    "#FF6384",
-    "#36A2EB",
-    "#FFCE56",
-    "#45A049",
-    "#F7464A",
-    "#949FB1",
-    "#4D5360",
-  ];
-
   const daysInCurrentMonth = getDaysInMonth(currentYear, currentMonth);
   const startDay = getStartDayOfMonth(currentYear, currentMonth); // Start day for the current month
 
@@ -47,7 +37,14 @@ function MonthBody({ month }) {
         const response = await axios.get(
           "http://localhost:5000/api/appointments"
         );
-        setAppointments(response.data);
+
+        // Assign a random color to each appointment
+        const appointmentsWithColors = response.data.map((appointment) => ({
+          ...appointment,
+          color: randomColor(), // Assign a random color here
+        }));
+
+        setAppointments(appointmentsWithColors);
       } catch (error) {
         console.error("Error fetching appointments: ", error);
       }
@@ -120,12 +117,10 @@ function MonthBody({ month }) {
             {/* Render appointments for the current day */}
             {dayObj.currentMonth &&
               getAppointmentsForDay(dayObj.day).map((appointment, i) => {
-                const randomColor =
-                  colors[Math.floor(Math.random() * colors.length)]; // Get random color
                 return (
                   <div
                     key={i}
-                    style={{ backgroundColor: randomColor }} // Inline style for background color
+                    style={{ backgroundColor: appointment.color }} // Use the assigned color
                     className="text-sm py-1 px-2 rounded-md font-semibold text-white"
                   >
                     {appointment.title}
