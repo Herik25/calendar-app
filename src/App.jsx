@@ -3,11 +3,11 @@ import Header from "./Components/Header";
 import MonthBody from "./Components/MonthBody";
 import WeekBody from "./Components/WeekBody";
 import DayBody from "./Components/DayBody";
-import { MdOutlineClose } from "react-icons/md";
-import { RiAlertFill } from "react-icons/ri";
 import CustomModal from "./Components/Custom/CustomModel";
 import { Field, FormikProvider, useFormik } from "formik";
 import CustomInput from "./Components/Custom/CustomInput";
+import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
 
 function App() {
   const date = new Date();
@@ -49,8 +49,21 @@ function App() {
 
   // handle form submit
 
-  const handleSubmit = (values, formikHelpers) => {
-    console.log(values);
+  const handleSubmit = async (values, formikHelpers) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/appointments",
+        values
+      );
+      if (response) {
+        console.log("data entered!");
+        handleCloseModal();
+        toast.success("Appointment created successfully!");
+        formikHelpers.resetForm();
+      }
+    } catch (error) {
+      console.log("error creating appointment : ", error);
+    }
   };
 
   const formik = useFormik({
@@ -127,13 +140,16 @@ function App() {
                   <button className=" p-2" onClick={() => handleCloseModal()}>
                     cancle
                   </button>
-                  <button className=" p-2">Add Appointment</button>
+                  <button type="submit" className=" p-2">
+                    Add Appointment
+                  </button>
                 </div>
               </div>
             </form>
           </FormikProvider>
         </CustomModal>
       )}
+      <Toaster position="top-right" reverseOrder={false} />
     </div>
   );
 }

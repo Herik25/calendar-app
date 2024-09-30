@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 // Helper function to get the number of days in a given month
 const getDaysInMonth = (year, month) => {
@@ -10,13 +11,26 @@ const getStartDayOfMonth = (year, month) => {
   return new Date(year, month, 1).getDay(); // Sunday = 0, Monday = 1, etc.
 };
 
-function MonthBody({month}) {
+function MonthBody({ month }) {
   const date = new Date();
   const currentYear = date.getFullYear();
   const currentMonth = month; // For testing, you can set a specific month, e.g., 8 for September
 
+  const [appointments, setAppointments] = useState([]);
+
   // Days of the week array starting with Sunday
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thurs", "Fri", "Sat"];
+
+  // Colors to choose randomly
+  const colors = [
+    "#FF6384",
+    "#36A2EB",
+    "#FFCE56",
+    "#45A049",
+    "#F7464A",
+    "#949FB1",
+    "#4D5360",
+  ];
 
   const daysInCurrentMonth = getDaysInMonth(currentYear, currentMonth);
   const startDay = getStartDayOfMonth(currentYear, currentMonth); // Start day for the current month
@@ -25,6 +39,34 @@ function MonthBody({month}) {
   const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1; // If current month is January, previous month is December
   const previousMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
   const daysInPreviousMonth = getDaysInMonth(previousMonthYear, previousMonth);
+
+  // Fetch appointments for the current month
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/appointments"
+        );
+        setAppointments(response.data);
+      } catch (error) {
+        console.error("Error fetching appointments: ", error);
+      }
+    };
+
+    fetchAppointments();
+  }, [currentMonth]);
+
+  // Filter appointments for the current month
+  const getAppointmentsForDay = (day) => {
+    return appointments.filter((appointment) => {
+      const appointmentDate = new Date(appointment.date);
+      return (
+        appointmentDate.getFullYear() === currentYear &&
+        appointmentDate.getMonth() === currentMonth &&
+        appointmentDate.getDate() === day
+      );
+    });
+  };
 
   // Create an array for the days of the calendar
   const daysArray = [];
@@ -73,11 +115,23 @@ function MonthBody({month}) {
               dayObj.currentMonth ? "bg-white" : "bg-gray-100 text-gray-400"
             }`}
           >
-            <div className=" text-right text-xl">{dayObj.day}</div>
-            {/* TODO: Dynamic Data from BackEnd */}
-            {/* <div className=" bg-pink-300 text-sm py-1 px-2 rounded-md font-semibold">
-              something
-            </div> */}
+            <div className="text-right text-xl">{dayObj.day}</div>
+
+            {/* Render appointments for the current day */}
+            {dayObj.currentMonth &&
+              getAppointmentsForDay(dayObj.day).map((appointment, i) => {
+                const randomColor =
+                  colors[Math.floor(Math.random() * colors.length)]; // Get random color
+                return (
+                  <div
+                    key={i}
+                    style={{ backgroundColor: randomColor }} // Inline style for background color
+                    className="text-sm py-1 px-2 rounded-md font-semibold text-white"
+                  >
+                    {appointment.title}
+                  </div>
+                );
+              })}
           </div>
         ))}
       </div>
