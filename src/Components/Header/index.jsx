@@ -11,6 +11,7 @@ function Header({
   setDay,
   goToPreviousWeek,
   goToNextWeek,
+  handleOpenModal,
 }) {
   const date = new Date();
   const monthNames = [
@@ -112,7 +113,10 @@ function Header({
             <BiChevronRight />
           </div>
         </div>
-        <div className=" bg-primary py-3 px-5 text-white rounded-full">
+        <div
+          onClick={() => handleOpenModal()}
+          className=" bg-primary py-3 px-5 text-white rounded-full cursor-pointer"
+        >
           Add Appointment
         </div>
       </div>
