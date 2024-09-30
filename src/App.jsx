@@ -11,23 +11,20 @@ function App() {
   const [showBody, setShowBody] = useState("month");
   const [month, setMonth] = useState(currentMonth);
   const [day, setDay] = useState(currentDay);
-  // State to hold the current date (week)
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Function to move to the next week
   const goToNextWeek = () => {
     setCurrentDate((prevDate) => {
       const nextWeek = new Date(prevDate);
-      nextWeek.setDate(prevDate.getDate() + 7); // Move forward by 7 days
+      nextWeek.setDate(prevDate.getDate() + 7);
       return nextWeek;
     });
   };
 
-  // Function to move to the previous week
   const goToPreviousWeek = () => {
     setCurrentDate((prevDate) => {
       const previousWeek = new Date(prevDate);
-      previousWeek.setDate(prevDate.getDate() - 7); // Move back by 7 days
+      previousWeek.setDate(prevDate.getDate() - 7);
       return previousWeek;
     });
   };
