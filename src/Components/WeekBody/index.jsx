@@ -16,9 +16,8 @@ const formatDay = (date) => {
   return `${day} ${weekday}`; // Revert the order to "Sun 22"
 };
 
-function WeekBody() {
-  const date = new Date();
-  const startOfWeek = getStartOfWeek(date);
+function WeekBody({ currentDate }) {
+  const startOfWeek = getStartOfWeek(currentDate); // Use the current date prop
 
   // Days of the week array starting from Sunday
   const daysOfWeek = Array.from({ length: 7 }, (_, index) => {
@@ -47,7 +46,10 @@ function WeekBody() {
         {/* First Column for Time Slots */}
         <div className="flex flex-col">
           {timeSlots.map((time, index) => (
-            <div key={index} className="h-12 flex items-start justify-end px-2 text-sm">
+            <div
+              key={index}
+              className="h-12 flex items-start justify-end px-2 text-sm"
+            >
               {time}
             </div>
           ))}
@@ -62,9 +64,6 @@ function WeekBody() {
                 className="min-h-12 p-2 flex flex-col gap-1 items-center w-full border border-gray-300"
               >
                 {/* TODO: Dynamic Data from BackEnd */}
-                {/* <div className=" bg-pink-300 text-sm py-1 px-2 rounded-md font-semibold w-full text-center">
-                  something
-                </div> */}
               </div>
             ))}
           </div>

@@ -10,10 +10,10 @@ const getStartDayOfMonth = (year, month) => {
   return new Date(year, month, 1).getDay(); // Sunday = 0, Monday = 1, etc.
 };
 
-function MonthBody() {
+function MonthBody({month}) {
   const date = new Date();
   const currentYear = date.getFullYear();
-  const currentMonth = date.getMonth(); // For testing, you can set a specific month, e.g., 8 for September
+  const currentMonth = month; // For testing, you can set a specific month, e.g., 8 for September
 
   // Days of the week array starting with Sunday
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thurs", "Fri", "Sat"];

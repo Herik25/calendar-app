@@ -2,7 +2,16 @@ import React from "react";
 import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
 import { FaCheck } from "react-icons/fa6";
 
-function Header() {
+function Header({
+  showBody,
+  setShowBody,
+  month,
+  setMonth,
+  day,
+  setDay,
+  goToPreviousWeek,
+  goToNextWeek,
+}) {
   const date = new Date();
   const monthNames = [
     "JANUARY",
@@ -19,7 +28,7 @@ function Header() {
     "DECEMBER",
   ];
 
-  const currentMonth = monthNames[date.getMonth()];
+  const currentMonth = monthNames[month];
   const currentYear = date.getFullYear();
 
   return (
@@ -29,25 +38,77 @@ function Header() {
         <span>{currentYear}</span>
       </div>
       <div className=" flex items-center font-medium text-sm">
-        <div className=" flex items-center gap-1 px-4 py-3 border-[1px] border-l-black rounded-l-full border-t-black border-b-black border-r-black">
-          <FaCheck /> Month
+        <div
+          onClick={() => setShowBody("month")}
+          className=" cursor-pointer flex items-center gap-1 px-4 py-3 border-[1px] border-l-black rounded-l-full border-t-black border-b-black border-r-black"
+        >
+          {showBody === "month" && <FaCheck />}
+          Month
         </div>
-        <div className=" px-4 py-3 border-[1px] border-t-black border-b-black border-r-black">
+        <div
+          onClick={() => setShowBody("week")}
+          className="cursor-pointer flex items-center gap-1 px-4 py-3 border-[1px] border-t-black border-b-black border-r-black"
+        >
+          {showBody === "week" && <FaCheck />}
           Week
         </div>
-        <div className="px-4 py-3 border-[1px] border-r-black rounded-r-full border-t-black border-b-black ">
+        <div
+          onClick={() => setShowBody("day")}
+          className="cursor-pointer flex items-center gap-1 px-4 py-3 border-[1px] border-r-black rounded-r-full border-t-black border-b-black "
+        >
+          {showBody === "day" && <FaCheck />}
           Day
         </div>
       </div>
       <div className=" flex items-center gap-5">
         <div className=" flex gap-1 items-center">
-          <div className=" text-2xl">
+          <div
+            className=" text-2xl cursor-pointer"
+            onClick={() => {
+              if (showBody === "month") {
+                if (month === 0) {
+                  setMonth(0);
+                } else {
+                  setMonth(month - 1);
+                }
+              } else if (showBody === "week") {
+                goToPreviousWeek();
+              } else if (showBody === "day") {
+                if (day === 0) {
+                  setDay(6);
+                } else {
+                  setDay(day - 1);
+                }
+              }
+            }}
+          >
             <BiChevronLeft />
           </div>
           <div className="text-secondary font-bold text-sm border-[1px] border-black rounded-full px-5 py-2">
-            Today
+            {showBody === "day" && "Today"}
+            {showBody === "week" && "Week"}
+            {showBody === "month" && "Month"}
           </div>
-          <div className=" text-2xl">
+          <div
+            className=" text-2xl cursor-pointer"
+            onClick={() => {
+              if (showBody === "month") {
+                if (month === 11) {
+                  setMonth(11);
+                } else {
+                  setMonth(month + 1);
+                }
+              } else if (showBody === "week") {
+                goToNextWeek();
+              } else if (showBody === "day") {
+                if (day === 6) {
+                  setDay(0);
+                } else {
+                  setDay(day + 1);
+                }
+              }
+            }}
+          >
             <BiChevronRight />
           </div>
         </div>

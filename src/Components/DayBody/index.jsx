@@ -6,7 +6,7 @@ const generateTimeSlots = () =>
     hour < 10 ? `0${hour}:00` : `${hour}:00`
   );
 
-function DayBody() {
+function DayBody({day}) {
   const daysOfWeek = [
     "Sunday",
     "Monday",
@@ -16,11 +16,11 @@ function DayBody() {
     "Friday",
     "Saturday",
   ];
-  const date = new Date();
+  // const date = new Date();
   // Time slots from 00:00 to 23:00
   const timeSlots = generateTimeSlots();
-  const currentDay = daysOfWeek[date.getDay()]; // Get the current day
-
+  const currentDay = daysOfWeek[day]; // Get the current day
+  
   return (
     <div className="p-4">
       {/* Day Header */}
