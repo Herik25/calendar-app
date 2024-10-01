@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import randomColor from "randomcolor";
+import { Field, FormikProvider, useFormik } from "formik";
+import CustomModal from "../Custom/CustomModel"; // Ensure this modal component is implemented
+import CustomInput from "../Custom/CustomInput"; // Ensure this input component is implemented
 
 // Helper function to get the number of days in a given month
 const getDaysInMonth = (year, month) => {
@@ -15,20 +18,14 @@ const getStartDayOfMonth = (year, month) => {
 function MonthBody({ month }) {
   const date = new Date();
   const currentYear = date.getFullYear();
-  const currentMonth = month; // For testing, you can set a specific month, e.g., 8 for September
+  const currentMonth = month;
 
   const [appointments, setAppointments] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(null);
 
   // Days of the week array starting with Sunday
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thurs", "Fri", "Sat"];
-
-  const daysInCurrentMonth = getDaysInMonth(currentYear, currentMonth);
-  const startDay = getStartDayOfMonth(currentYear, currentMonth); // Start day for the current month
-
-  // Previous month calculations
-  const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1; // If current month is January, previous month is December
-  const previousMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-  const daysInPreviousMonth = getDaysInMonth(previousMonthYear, previousMonth);
 
   // Fetch appointments for the current month
   useEffect(() => {
@@ -37,13 +34,10 @@ function MonthBody({ month }) {
         const response = await axios.get(
           "http://localhost:5000/api/appointments"
         );
-
-        // Assign a random color to each appointment
         const appointmentsWithColors = response.data.map((appointment) => ({
           ...appointment,
-          color: randomColor(), // Assign a random color here
+          color: randomColor(),
         }));
-
         setAppointments(appointmentsWithColors);
       } catch (error) {
         console.error("Error fetching appointments: ", error);
@@ -65,33 +59,83 @@ function MonthBody({ month }) {
     });
   };
 
+  // Handle appointment click for editing
+  const handleAppointmentClick = (appointment) => {
+    setEditingAppointment(appointment);
+    setIsModalOpen(true);
+  };
+
+  // Submit updated appointment
+  const handleSubmit = async (values, formikHelpers) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/appointments/${editingAppointment._id}`,
+        values
+      );
+      if (response) {
+        setAppointments((prev) =>
+          prev.map((appt) =>
+            appt._id === editingAppointment._id ? { ...appt, ...values } : appt
+          )
+        );
+        setIsModalOpen(false);
+        formikHelpers.resetForm();
+        setEditingAppointment(null);
+      }
+    } catch (error) {
+      console.error("Error updating appointment: ", error);
+    }
+  };
+
+  // Handle Delete
+  const handleDelete = async () => {
+    if (!editingAppointment) return; // Prevent if no appointment is selected
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/appointments/${editingAppointment._id}`
+      );
+      setAppointments((prev) =>
+        prev.filter((appt) => appt._id !== editingAppointment._id)
+      );
+      setIsModalOpen(false);
+      setEditingAppointment(null);
+    } catch (error) {
+      console.error("Error deleting appointment: ", error);
+    }
+  };
+
+  // Initialize Formik for handling the edit form
+  const formik = useFormik({
+    initialValues: {
+      title: editingAppointment ? editingAppointment.title : "",
+      date: editingAppointment ? editingAppointment.date : "",
+      startTime: editingAppointment ? editingAppointment.startTime : "",
+      endTime: editingAppointment ? editingAppointment.endTime : "",
+    },
+    enableReinitialize: true,
+    onSubmit: handleSubmit,
+  });
+
   // Create an array for the days of the calendar
   const daysArray = [];
+  const daysInCurrentMonth = getDaysInMonth(currentYear, currentMonth);
+  const startDay = getStartDayOfMonth(currentYear, currentMonth);
 
-  // Add dates from the previous month for the empty slots before the 1st of the current month
+  // Fill calendar days with previous, current, and next month
+  const daysInPreviousMonth = getDaysInMonth(
+    currentYear,
+    currentMonth === 0 ? 11 : currentMonth - 1
+  );
   for (let i = startDay - 1; i >= 0; i--) {
-    daysArray.push({
-      day: daysInPreviousMonth - i, // Filling the days from the end of the previous month
-      currentMonth: false, // Indicate that this date is from the previous month
-    });
+    daysArray.push({ day: daysInPreviousMonth - i, currentMonth: false });
   }
-
-  // Add the actual days of the current month
   for (let i = 1; i <= daysInCurrentMonth; i++) {
-    daysArray.push({
-      day: i,
-      currentMonth: true,
-    });
+    daysArray.push({ day: i, currentMonth: true });
   }
-
-  // Add dates from the next month to fill out the remaining grid cells
-  const totalCells = 42; // 6 rows * 7 days per week = 42 cells
+  const totalCells = 42;
   const remainingCells = totalCells - daysArray.length;
   for (let i = 1; i <= remainingCells; i++) {
-    daysArray.push({
-      day: i,
-      currentMonth: false, // Indicate that this date is from the next month
-    });
+    daysArray.push({ day: i, currentMonth: false });
   }
 
   return (
@@ -116,20 +160,91 @@ function MonthBody({ month }) {
 
             {/* Render appointments for the current day */}
             {dayObj.currentMonth &&
-              getAppointmentsForDay(dayObj.day).map((appointment, i) => {
-                return (
-                  <div
-                    key={i}
-                    style={{ backgroundColor: appointment.color }} // Use the assigned color
-                    className="text-sm py-1 px-2 rounded-md font-semibold text-white"
-                  >
-                    {appointment.title}
-                  </div>
-                );
-              })}
+              getAppointmentsForDay(dayObj.day).map((appointment, i) => (
+                <div
+                  key={i}
+                  style={{ backgroundColor: appointment.color }} // Use the assigned color
+                  className="text-sm py-1 px-2 rounded-md font-semibold text-white cursor-pointer"
+                  onClick={() => handleAppointmentClick(appointment)} // Handle click to edit
+                >
+                  {appointment.title}
+                </div>
+              ))}
           </div>
         ))}
       </div>
+
+      {/* Custom Modal for Editing */}
+      {isModalOpen && (
+        <CustomModal handleCloseModal={() => setIsModalOpen(false)}>
+          <FormikProvider value={formik}>
+            <form
+              className="p-6 relative"
+              onSubmit={(e) => {
+                e.preventDefault();
+                formik.handleSubmit();
+              }}
+            >
+              <h2 className="text-xl mb-3 font-semibold">Edit Appointment</h2>
+              <div className="flex flex-col items-center justify-between gap-4">
+                <Field
+                  name="title"
+                  label="Title"
+                  placeholder="Enter Title"
+                  required
+                  component={CustomInput}
+                />
+                <Field
+                  name="date"
+                  label="Date"
+                  placeholder="Enter Date"
+                  required
+                  type="date"
+                  component={CustomInput}
+                />
+                <Field
+                  name="startTime"
+                  label="Start Time"
+                  placeholder="Enter Start Time"
+                  type="time"
+                  required
+                  component={CustomInput}
+                />
+                <Field
+                  name="endTime"
+                  label="End Time"
+                  placeholder="Enter End Time"
+                  type="time"
+                  required
+                  component={CustomInput}
+                />
+                <div className="flex items-center justify-between w-full text-sm text-primary font-semibold">
+                  <div className="flex items-center">
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="p-2 bg-red-600 rounded-md text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      className="p-2"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" className="p-2">
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </FormikProvider>
+        </CustomModal>
+      )}
     </div>
   );
 }
