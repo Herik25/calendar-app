@@ -108,7 +108,7 @@ function MonthBody({ month }) {
   const formik = useFormik({
     initialValues: {
       title: editingAppointment ? editingAppointment.title : "",
-      date: editingAppointment ? editingAppointment.date : "",
+      date: editingAppointment ? editingAppointment.date.split("T")[0] : "",
       startTime: editingAppointment ? editingAppointment.startTime : "",
       endTime: editingAppointment ? editingAppointment.endTime : "",
     },
@@ -138,6 +138,41 @@ function MonthBody({ month }) {
     daysArray.push({ day: i, currentMonth: false });
   }
 
+  // Drag-and-drop handling
+  const handleDragStart = (appointment) => {
+    setEditingAppointment(appointment); // Set the appointment being dragged
+  };
+
+  const handleDrop = (day) => {
+    if (!editingAppointment) return; // Prevent if no appointment is being dragged
+
+    // Create a new appointment object with the updated date
+    const updatedAppointment = {
+      ...editingAppointment,
+      date: new Date(currentYear, currentMonth, day).toLocaleDateString(
+        "en-CA"
+      ), // Update date
+    };
+
+    // Update the appointment in the backend
+    axios
+      .put(
+        `http://localhost:5000/api/appointments/${editingAppointment._id}`,
+        updatedAppointment
+      )
+      .then(() => {
+        setAppointments((prev) =>
+          prev.map((appt) =>
+            appt._id === editingAppointment._id ? updatedAppointment : appt
+          )
+        );
+        setEditingAppointment(null); // Reset the editing appointment
+      })
+      .catch((error) => {
+        console.error("Error updating appointment: ", error);
+      });
+  };
+
   return (
     <div className="p-4">
       {/* Days of the Week */}
@@ -155,6 +190,8 @@ function MonthBody({ month }) {
             className={`h-40 border border-gray-300 p-2 flex flex-col gap-1 ${
               dayObj.currentMonth ? "bg-white" : "bg-gray-100 text-gray-400"
             }`}
+            onDragOver={(e) => e.preventDefault()} // Allow drop
+            onDrop={() => handleDrop(dayObj.day)} // Handle drop
           >
             <div className="text-right text-xl">{dayObj.day}</div>
 
@@ -165,6 +202,8 @@ function MonthBody({ month }) {
                   key={i}
                   style={{ backgroundColor: appointment.color }} // Use the assigned color
                   className="text-sm py-1 px-2 rounded-md font-semibold text-white cursor-pointer"
+                  draggable // Make this div draggable
+                  onDragStart={() => handleDragStart(appointment)} // Set the appointment being dragged
                   onClick={() => handleAppointmentClick(appointment)} // Handle click to edit
                 >
                   {appointment.title}
