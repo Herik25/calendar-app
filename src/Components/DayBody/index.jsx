@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import randomColor from "randomcolor";
+import { Field, FormikProvider, useFormik } from "formik";
+import CustomModal from "../Custom/CustomModel"; // Ensure this modal component is implemented
+import CustomInput from "../Custom/CustomInput"; // Ensure this input component is implemented
 
 // Helper function to generate time slots from 00:00 to 23:00
 const generateTimeSlots = () =>
@@ -23,6 +26,8 @@ function DayBody({ day }) {
   const currentDay = daysOfWeek[day]; // Get the current day
 
   const [appointments, setAppointments] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(null);
 
   // Fetch appointments for the current day
   useEffect(() => {
@@ -68,6 +73,63 @@ function DayBody({ day }) {
     });
   };
 
+  // Handle appointment click for editing
+  const handleAppointmentClick = (appointment) => {
+    setEditingAppointment(appointment);
+    setIsModalOpen(true);
+  };
+
+  // Submit updated appointment
+  const handleSubmit = async (values, formikHelpers) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/appointments/${editingAppointment._id}`,
+        values
+      );
+      if (response) {
+        setAppointments((prev) =>
+          prev.map((appt) =>
+            appt._id === editingAppointment._id ? { ...appt, ...values } : appt
+          )
+        );
+        setIsModalOpen(false);
+        formikHelpers.resetForm();
+        setEditingAppointment(null);
+      }
+    } catch (error) {
+      console.error("Error updating appointment: ", error);
+    }
+  };
+
+  // Handle Delete
+  const handleDelete = async () => {
+    if (!editingAppointment) return; // Prevent if no appointment is selected
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/appointments/${editingAppointment._id}`
+      );
+      setAppointments((prev) =>
+        prev.filter((appt) => appt._id !== editingAppointment._id)
+      );
+      setIsModalOpen(false);
+      setEditingAppointment(null);
+    } catch (error) {
+      console.error("Error deleting appointment: ", error);
+    }
+  };
+
+  // Initialize Formik for handling the edit form
+  const formik = useFormik({
+    initialValues: {
+      title: editingAppointment ? editingAppointment.title : "",
+      date: editingAppointment ? editingAppointment.date : "",
+      startTime: editingAppointment ? editingAppointment.startTime : "",
+      endTime: editingAppointment ? editingAppointment.endTime : "",
+    },
+    enableReinitialize: true,
+    onSubmit: handleSubmit,
+  });
+
   return (
     <div className="p-4">
       {/* Day Header */}
@@ -100,7 +162,8 @@ function DayBody({ day }) {
                   <div
                     key={i}
                     style={{ backgroundColor: appointment.color }} // Use the assigned color
-                    className="text-sm  text-white py-1 px-2 rounded-md font-semibold w-full"
+                    className="text-sm text-white py-1 px-2 rounded-md font-semibold w-full cursor-pointer"
+                    onClick={() => handleAppointmentClick(appointment)} // Handle click to edit
                   >
                     {appointment.title}
                   </div>
@@ -110,6 +173,81 @@ function DayBody({ day }) {
           })}
         </div>
       </div>
+
+      {/* Custom Modal for Editing */}
+      {isModalOpen && (
+        <CustomModal handleCloseModal={() => setIsModalOpen(false)}>
+          <FormikProvider value={formik}>
+            <form
+              className="p-6 relative"
+              onSubmit={(e) => {
+                e.preventDefault();
+                formik.handleSubmit();
+              }}
+            >
+              <h2 className="text-xl mb-3 font-semibold">Edit Appointment</h2>
+              <div className="flex flex-col items-center justify-between gap-4">
+                <Field
+                  name="title"
+                  label="Title"
+                  placeholder="Enter Title"
+                  required
+                  component={CustomInput}
+                />
+                <Field
+                  name="date"
+                  label="Date"
+                  placeholder="Enter Date"
+                  required
+                  type="date"
+                  component={CustomInput}
+                />
+                <Field
+                  name="startTime"
+                  label="Start Time"
+                  placeholder="Enter Start Time"
+                  type="time"
+                  required
+                  component={CustomInput}
+                />
+                <Field
+                  name="endTime"
+                  label="End Time"
+                  placeholder="Enter End Time"
+                  type="time"
+                  required
+                  component={CustomInput}
+                />
+                <div className="flex items-center justify-between w-full text-sm text-primary font-semibold">
+                  <div className="flex items-center">
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="p-2 bg-red-600 rounded-md text-white"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      className="p-2"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="p-2 bg-green-600 rounded-md text-white"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </FormikProvider>
+        </CustomModal>
+      )}
     </div>
   );
 }
