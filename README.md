@@ -47,7 +47,7 @@ To set up the project locally, follow these steps:
 2. **Navigate to the project folder**:
 
    ```bash
-   cd calendar-app
+   cd Client
    ```
 
 3. **Install server and client dependencies**:
@@ -56,13 +56,24 @@ To set up the project locally, follow these steps:
    npm install
    ```
 
-4. **Run the server**:
+4. **Navigate to the server folder**:
+    ```bash
+   cd server
+   ```
+
+5. **Install server and client dependencies**:
+
+   ```bash
+   npm install
+   ```
+
+6. **Run the server**:
 
    ```bash
    npm run server
    ```
 
-5. **Run the front-end in development mode**:
+7. **Run the front-end in development mode**:
    ```bash
    npm run dev
    ```
