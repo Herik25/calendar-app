@@ -56,7 +56,6 @@ function App() {
         values
       );
       if (response) {
-        console.log("data entered!");
         handleCloseModal();
         toast.success("Appointment created successfully!");
         formikHelpers.resetForm();

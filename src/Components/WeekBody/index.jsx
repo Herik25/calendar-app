@@ -28,6 +28,7 @@ function WeekBody({ currentDate }) {
   const [appointments, setAppointments] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
+  const [draggedAppointment, setDraggedAppointment] = useState(null);
 
   const startOfWeek = getStartOfWeek(currentDate); // Use the current date prop
 
@@ -128,6 +129,39 @@ function WeekBody({ currentDate }) {
     }
   };
 
+  // Handle drag start
+  const handleDragStart = (appointment) => {
+    setDraggedAppointment(appointment);
+  };
+
+  // Handle drop on a new time slot
+  const handleDrop = async (day, time) => {
+    if (!draggedAppointment) return;
+
+    const updatedAppointment = {
+      ...draggedAppointment,
+      date: day.date.toISOString().split("T")[0], // Store the date in ISO format
+      startTime: time,
+      endTime: timeToHour(time) + 1 + ":00", // Add 1 hour to the end time
+    };
+
+    try {
+      await axios.put(
+        `http://localhost:5000/api/appointments/${draggedAppointment._id}`,
+        updatedAppointment
+      );
+      setAppointments((prev) =>
+        prev.map((appt) =>
+          appt._id === draggedAppointment._id ? updatedAppointment : appt
+        )
+      );
+    } catch (error) {
+      console.error("Error updating appointment: ", error);
+    }
+
+    setDraggedAppointment(null);
+  };
+
   // Initialize Formik for handling the edit form
   const formik = useFormik({
     initialValues: {
@@ -175,11 +209,17 @@ function WeekBody({ currentDate }) {
                 <div
                   key={timeIndex}
                   className="min-h-12 p-2 flex flex-col gap-1 items-center w-full border border-gray-300"
+                  onDragOver={(e) => {
+                    e.preventDefault(); // Prevent default to allow drop
+                  }}
+                  onDrop={() => handleDrop(day, time)}
                 >
                   {/* Render appointments for the current day and time slot */}
                   {appointmentsForSlot.map((appointment, i) => (
                     <div
                       key={i}
+                      draggable
+                      onDragStart={() => handleDragStart(appointment)}
                       style={{ backgroundColor: appointment.color }} // Use the assigned color
                       className="text-white text-sm py-1 px-2 rounded-md font-semibold w-full cursor-pointer"
                       onClick={() => handleAppointmentClick(appointment)} // Handle click to edit
