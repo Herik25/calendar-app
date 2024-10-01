@@ -46,6 +46,7 @@ function DayBody({ day }) {
         setAppointments(appointmentsWithColors);
       } catch (error) {
         console.error("Error fetching appointments: ", error);
+        alert("Failed to fetch appointments. Please try again later."); // User feedback
       }
     };
 
@@ -130,6 +131,53 @@ function DayBody({ day }) {
     onSubmit: handleSubmit,
   });
 
+  // Handle drag and drop
+  const handleDragStart = (e, appointment) => {
+    e.dataTransfer.setData("appointmentId", appointment._id);
+  };
+
+  const handleDrop = async (e, hour) => {
+    e.preventDefault();
+    const appointmentId = e.dataTransfer.getData("appointmentId");
+    const draggedAppointment = appointments.find(
+      (appt) => appt._id === appointmentId
+    );
+
+    if (draggedAppointment) {
+      // Update the appointment in the state
+      const updatedAppointment = {
+        ...draggedAppointment,
+        endTime: `${hour + 1}:00`, // Update end time to the next hour
+      };
+
+      try {
+        // Send a PUT request to update the appointment in the database
+        await axios.put(
+          `http://localhost:5000/api/appointments/${appointmentId}`,
+          {
+            title: updatedAppointment.title,
+            date: updatedAppointment.date,
+            startTime: updatedAppointment.startTime,
+            endTime: updatedAppointment.endTime,
+          }
+        );
+
+        // Update the state to reflect the changes
+        setAppointments((prev) =>
+          prev.map((appt) =>
+            appt._id === appointmentId ? updatedAppointment : appt
+          )
+        );
+      } catch (error) {
+        console.error("Error updating appointment: ", error);
+      }
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
   return (
     <div className="p-4">
       {/* Day Header */}
@@ -156,11 +204,15 @@ function DayBody({ day }) {
               <div
                 key={index}
                 className="min-h-16 flex flex-col gap-1 items-center p-2 border border-gray-300"
+                onDrop={(e) => handleDrop(e, hour)}
+                onDragOver={handleDragOver}
               >
                 {/* Render appointments for the current hour */}
                 {appointmentsForHour.map((appointment, i) => (
                   <div
                     key={i}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, appointment)} // Handle drag start
                     style={{ backgroundColor: appointment.color }} // Use the assigned color
                     className="text-sm text-white py-1 px-2 rounded-md font-semibold w-full cursor-pointer"
                     onClick={() => handleAppointmentClick(appointment)} // Handle click to edit
@@ -230,16 +282,17 @@ function DayBody({ day }) {
                   </div>
                   <div className="flex items-center gap-3">
                     <button
-                      className="p-2"
+                      type="button"
                       onClick={() => setIsModalOpen(false)}
+                      className="p-2 bg-gray-600 rounded-md text-white"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="p-2 bg-green-600 rounded-md text-white"
+                      className="p-2 bg-blue-600 rounded-md text-white"
                     >
-                      Save
+                      Update
                     </button>
                   </div>
                 </div>
