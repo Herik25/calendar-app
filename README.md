@@ -4,6 +4,7 @@
 This application allows users to manage appointments through an intuitive calendar interface, supporting features like adding, deleting, and moving appointments.
 
 ## Table of Contents
+
 1. [Introduction](#introduction)
 2. [Technologies Used](#technologies-used)
 3. [Features](#features)
@@ -38,40 +39,47 @@ The **Calendar Application** is a full-stack project that enables users to manag
 To set up the project locally, follow these steps:
 
 1. **Clone the repository**:
-    ```bash
-    git clone <repository-url>
-    ```
+
+   ```bash
+   git clone https://github.com/Herik25/calendar-app.git
+   ```
 
 2. **Navigate to the project folder**:
-    ```bash
-    cd calendar-app
-    ```
+
+   ```bash
+   cd calendar-app
+   ```
 
 3. **Install server and client dependencies**:
-    ```bash
-    npm install
-    ```
+
+   ```bash
+   npm install
+   ```
 
 4. **Run the server**:
-    ```bash
-    npm run start
-    ```
+
+   ```bash
+   npm run server
+   ```
 
 5. **Run the front-end in development mode**:
-    ```bash
-    npm run dev
-    ```
+   ```bash
+   npm run dev
+   ```
 
 ## Usage
 
 ### Adding an Appointment:
+
 1. Click on a date in the calendar.
 2. Fill out the appointment form with the date and description.
 3. Submit the form to save the appointment.
 
 ### Deleting an Appointment:
+
 1. Locate the appointment on the calendar.
 2. Click the delete icon next to the appointment to remove it.
 
 ### Moving an Appointment:
+
 1. Drag an appointment to a different date on the calendar to reschedule it.
