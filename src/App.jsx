@@ -60,6 +60,7 @@ function App() {
         handleCloseModal();
         toast.success("Appointment created successfully!");
         formikHelpers.resetForm();
+        window.location.reload();
       }
     } catch (error) {
       console.log("error creating appointment : ", error);
